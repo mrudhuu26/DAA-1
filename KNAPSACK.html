@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knapsack Problem Solver</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="number"] {
+            padding: 8px;
+            width: 100px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .items-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .output p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>0/1 Knapsack Problem Solver</h1>
+        <div>
+            <label for="capacity">Knapsack Capacity: </label>
+            <input type="number" id="capacity" value="50">
+        </div>
+        <div class="items-container">
+            <div>
+                <label>Item Weights:</label><br>
+                <input type="number" class="weights" value="10">
+                <input type="number" class="weights" value="20">
+                <input type="number" class="weights" value="30">
+            </div>
+            <div>
+                <label>Item Values:</label><br>
+                <input type="number" class="values" value="60">
+                <input type="number" class="values" value="100">
+                <input type="number" class="values" value="120">
+            </div>
+        </div>
+        <button onclick="solveKnapsack()">Solve</button>
+        <div class="output" id="output">
+            <!-- Solution will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        function solveKnapsack() {
+            const weights = Array.from(document.querySelectorAll('.weights')).map(input => parseInt(input.value));
+            const values = Array.from(document.querySelectorAll('.values')).map(input => parseInt(input.value));
+            const capacity = parseInt(document.getElementById('capacity').value);
+
+            const greedySolution = greedyKnapsack(weights, values, capacity);
+            const dpSolution = dynamicProgrammingKnapsack(weights, values, capacity);
+            const backtrackingSolution = backtrackingKnapsack(weights, values, capacity);
+
+            document.getElementById('output').innerHTML = `
+                <p><strong>Greedy Approach:</strong> ${greedySolution}</p>
+                <p><strong>Dynamic Programming Approach:</strong> ${dpSolution}</p>
+                <p><strong>Backtracking Approach:</strong> ${backtrackingSolution}</p>
+            `;
+        }
+
+        function greedyKnapsack(weights, values, capacity) {
+            const items = weights.map((weight, index) => ({
+                weight, value: values[index], ratio: values[index] / weight
+            }));
+
+            items.sort((a, b) => b.ratio - a.ratio);
+
+            let totalValue = 0;
+            let remainingCapacity = capacity;
+
+            for (let item of items) {
+                if (item.weight <= remainingCapacity) {
+                    remainingCapacity -= item.weight;
+                    totalValue += item.value;
+                }
+            }
+
+            return totalValue;
+        }
+
+        function dynamicProgrammingKnapsack(weights, values, capacity) {
+            const n = weights.length;
+            const dp = Array(n + 1).fill(0).map(() => Array(capacity + 1).fill(0));
+
+            for (let i = 1; i <= n; i++) {
+                for (let w = 1; w <= capacity; w++) {
+                    if (weights[i - 1] <= w) {
+                        dp[i][w] = Math.max(values[i - 1] + dp[i - 1][w - weights[i - 1]], dp[i - 1][w]);
+                    } else {
+                        dp[i][w] = dp[i - 1][w];
+                    }
+                }
+            }
+
+            return dp[n][capacity];
+        }
+
+        function backtrackingKnapsack(weights, values, capacity, index = 0) {
+            if (index >= weights.length || capacity <= 0) return 0;
+
+            const include = weights[index] <= capacity
+                ? values[index] + backtrackingKnapsack(weights, values, capacity - weights[index], index + 1)
+                : 0;
+
+            const exclude = backtrackingKnapsack(weights, values, capacity, index + 1);
+
+            return Math.max(include, exclude);
+        }
+    </script>
+</body>
+</html>
